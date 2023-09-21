@@ -1,0 +1,3 @@
+# module bits
+__pycache__/
+*.egg-info/
