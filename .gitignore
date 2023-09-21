@@ -1,2 +1,5 @@
 # python
 __pycache__/
+*.egg-info/
+
+advent-of-code-utils/
