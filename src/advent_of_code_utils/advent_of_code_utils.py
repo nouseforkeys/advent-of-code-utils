@@ -2,9 +2,11 @@
 useful funcs for advent of code such as loading in the inputs
 """
 
-from dataclasses import dataclass
 import pathlib
+from dataclasses import dataclass
 from typing import Callable
+
+from IPython.display import Markdown, display
 
 
 def load_from_file(
@@ -115,3 +117,8 @@ def parse_string(
         return parsed_output.pop()
     else:
         return parsed_output
+
+
+def markdown(*lines: str) -> None:
+    """Shortcut for using IPython.display.display to render markdown"""
+    display(Markdown('\n'.join(lines)))
