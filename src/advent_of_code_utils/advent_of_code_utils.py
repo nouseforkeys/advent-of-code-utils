@@ -2,11 +2,19 @@
 useful funcs for advent of code such as loading in the inputs
 """
 
+import contextlib
 import pathlib
+import shutil
 from dataclasses import dataclass
-from typing import Callable
+from math import ceil, log10
+from pathlib import Path
+from typing import Any, Callable
 
 from IPython.display import Markdown, display
+from matplotlib import pyplot as plt
+import numpy as np
+from PIL import Image
+from tqdm import tqdm
 
 
 def load_from_file(
@@ -122,3 +130,90 @@ def parse_string(
 def markdown(*lines: str) -> None:
     """Shortcut for using IPython.display.display to render markdown"""
     display(Markdown('\n'.join(lines)))
+
+
+# let's make some gifs
+def create_gif_from_images(
+        image_paths: list, gif_name: Path, duration: int) -> None:
+    """creates a gif with the images passed"""
+    with contextlib.ExitStack() as stack:
+        images = (
+            stack.enter_context(Image.open(file))
+            for file in sorted(image_paths)
+        )
+        image = next(images)
+        image.save(
+            fp=gif_name, format='GIF', append_images=images, save_all=True,
+            duration=duration, loop=0)
+
+
+def create_plot_images(
+    frames: list,
+    plot_generator: Callable[[Any, plt.Axes], None],
+    title: str = None, append_iteration: bool = False
+) -> Path:
+    """
+    creates a gif of each frame rendered by the plot generator
+
+    the plot generator func must take one item from frames and an axis
+    """
+
+    # create temp directory for putting images into
+    image_path = Path('img_temp')
+    image_path.mkdir(exist_ok=True)
+
+    n_iterations = len(frames)
+
+    def i_str(value: int) -> str:
+        """formats a string with the right number of leading 0s"""
+        return f'{value:0{ceil(log10(n_iterations + 1))}d}'
+
+    # create images and save them without displaying
+    for iteration, frame in tqdm(
+        enumerate(frames), desc='generating frames', total=n_iterations
+    ):
+
+        fig, ax = plt.subplots()
+        plot_generator(frame, ax)
+
+        title_segments = []
+        if title is not None:
+            title_segments.append(title)
+        if append_iteration:
+            title_segments.append(f'iteration: {i_str(iteration)}')
+
+        if len(title_segments) > 0:
+            ax.set_title(' - '.join(title_segments))
+
+        fig.savefig(image_path / f'temp_{i_str(iteration)}.png')
+        plt.close(fig)
+
+    return image_path
+
+
+def create_gif(
+    frames: list,
+    plot_generator: Callable[[Any, plt.Axes], None], filename: Path,
+    frame_duration_ms: int = 50, title: str = None,
+    append_iteration: bool = False
+) -> None:
+    """top level gif creation function"""
+    filename = Path(filename).with_suffix('.gif')
+    # create images
+    image_path = create_plot_images(
+        frames, plot_generator, title=title, append_iteration=append_iteration)
+    # create a gif from them
+    create_gif_from_images(
+        image_path.glob('*.png'), filename, frame_duration_ms)
+    # clean up temp image directory
+    shutil.rmtree(image_path)
+
+
+def plot_grid(
+    grid: list[list[int]], ax: plt.Axes, remove_ticks: bool = True
+) -> None:
+    """Adds a pcolourmesh of a 2D grid of integers to the axis passed"""
+    ax.pcolormesh(np.flipud(grid))
+    if remove_ticks:
+        ax.set_xticks([])
+        ax.set_yticks([])
