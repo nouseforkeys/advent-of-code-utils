@@ -18,7 +18,7 @@ classifiers = [
 ]
 dependencies = [
   'matplotlib',
-  'numpy'
+  'numpy',
   'tqdm'
 ]
 
