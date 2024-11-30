@@ -3,18 +3,21 @@ useful funcs for advent of code such as loading in the inputs
 """
 
 import contextlib
+import logging
 import pathlib
 import shutil
 from dataclasses import dataclass
 from math import ceil, log10
 from pathlib import Path
-from typing import Any, Callable
+from typing import Callable, Iterable
 
+import numpy as np
 from IPython.display import Markdown, display
 from matplotlib import pyplot as plt
-import numpy as np
 from PIL import Image
 from tqdm import tqdm
+
+_log = logging.getLogger(Path(__file__).name)
 
 
 def load_from_file(
@@ -67,7 +70,9 @@ def parse_from_file(
     """
     with open(file) as f:
         entire_file = f.read().rstrip()
-    return parse_string(entire_file, parse_config, unnest_single_items)
+    output = parse_string(entire_file, parse_config, unnest_single_items)
+    _log.info(f'{len(output)} items loaded from "{file.name}"')
+    return output
 
 
 def parse_string(
@@ -134,8 +139,11 @@ def markdown(*lines: str) -> None:
 
 # let's make some gifs
 def create_gif_from_images(
-        image_paths: list, gif_name: Path, duration: int) -> None:
+        image_paths: list, gif_path: Path, duration_ms: int) -> None:
     """creates a gif with the images passed"""
+    _log.info(
+        f'Creating "{gif_path.name}" with frame duration {duration_ms}ms'
+    )
     with contextlib.ExitStack() as stack:
         images = (
             stack.enter_context(Image.open(file))
@@ -143,13 +151,14 @@ def create_gif_from_images(
         )
         image = next(images)
         image.save(
-            fp=gif_name, format='GIF', append_images=images, save_all=True,
-            duration=duration, loop=0)
+            fp=gif_path, format='GIF', append_images=images, save_all=True,
+            duration=duration_ms, loop=0)
+    _log.info(f'"{gif_path.name}" saved!')
 
 
 def create_plot_images(
     frames: list,
-    plot_generator: Callable[[Any, plt.Axes], None],
+    plot_generator: Callable[[Iterable, plt.Axes], None],
     title: str = None, append_iteration: bool = False
 ) -> Path:
     """
@@ -157,7 +166,10 @@ def create_plot_images(
 
     the plot generator func must take one item from frames and an axis
     """
-
+    _log.info(
+        f'Creating {len(frames)} frame images using '
+        f'"{plot_generator.__name__}()"'
+    )
     # create temp directory for putting images into
     image_path = Path('img_temp')
     image_path.mkdir(exist_ok=True)
@@ -188,25 +200,28 @@ def create_plot_images(
         fig.savefig(image_path / f'temp_{i_str(iteration)}.png')
         plt.close(fig)
 
+    _log.info(f'{len(frames)} images saved to "{image_path.name}"')
     return image_path
 
 
 def create_gif(
     frames: list,
-    plot_generator: Callable[[Any, plt.Axes], None], filename: Path,
+    plot_generator: Callable[[Iterable, plt.Axes], None], filename: Path,
     frame_duration_ms: int = 50, title: str = None,
     append_iteration: bool = False
-) -> None:
+) -> Path:
     """top level gif creation function"""
-    filename = Path(filename).with_suffix('.gif')
+    gif_path = Path(filename).with_suffix('.gif')
     # create images
     image_path = create_plot_images(
         frames, plot_generator, title=title, append_iteration=append_iteration)
     # create a gif from them
     create_gif_from_images(
-        image_path.glob('*.png'), filename, frame_duration_ms)
+        image_path.glob('*.png'), gif_path, frame_duration_ms)
     # clean up temp image directory
     shutil.rmtree(image_path)
+    _log.info(f'"{image_path.name}" cleaned up')
+    return gif_path
 
 
 def plot_grid(
