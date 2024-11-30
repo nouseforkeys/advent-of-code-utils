@@ -224,6 +224,22 @@ def create_gif(
     return gif_path
 
 
+def embed_image(filepath: Path) -> None:
+    """converts a file to bytes and embeds it into the notebook"""
+    filepath = Path(filepath)  # just in case string is passed
+    image_type = filepath.suffix[1:]
+    allowed = ['gif', 'png', 'jpg']
+    if filepath.suffix[1:] not in allowed:
+        raise ValueError(
+            f'file type "{image_type}" is not supported image types {allowed}')
+    _log.info(f'Embedding "{filepath.name}"')
+    with open(filepath, 'rb') as file:
+        display({
+            f'image/{image_type}': file.read(),
+            'text/plain': [f'Embedded from {filepath.name}']
+        }, raw=True)
+
+
 def plot_grid(
     grid: list[list[int]], ax: plt.Axes, remove_ticks: bool = True
 ) -> None:
