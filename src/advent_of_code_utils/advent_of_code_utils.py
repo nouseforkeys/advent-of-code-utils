@@ -249,3 +249,29 @@ def plot_grid(
     if remove_ticks:
         ax.set_xticks([])
         ax.set_yticks([])
+
+
+@dataclass
+class Point2:
+    l: int
+    c: int
+
+    def __add__(self, other: 'Point2') -> 'Point2':
+        return Point2(self.l + other.l, self.c + other.c)
+
+    def __neg__(self) -> 'Point2':
+        return Point2(-self.l, -self.c)
+
+    def __sub__(self, other: 'Point2') -> 'Point2':
+        return self + (-other)
+
+    def __repr__(self) -> str:
+        return f'({self.l}, {self.c})'
+
+    def __hash__(self) -> int:
+        return hash((self.l, self.c))
+
+    def adjacent(self) -> list['Point2']:
+        """returns adjacent loctions (does not bounds check)"""
+        offsets = [Point2(-1, 0), Point2(0, 1), Point2(1, 0), Point2(0, -1)]
+        return [self + offset for offset in offsets]
