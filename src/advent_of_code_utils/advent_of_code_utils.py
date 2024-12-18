@@ -265,6 +265,12 @@ class Point2:
     def __sub__(self, other: 'Point2') -> 'Point2':
         return self + (-other)
 
+    def __eq__(self, other: 'Point2') -> bool:
+        return self.l == other.l and self.c == other.c
+
+    def __ne__(self, other: 'Point2') -> bool:
+        return not self.__eq__(other)
+
     def __repr__(self) -> str:
         return f'({self.l}, {self.c})'
 
