@@ -301,6 +301,14 @@ class Point2:
         """casts the elements as integers"""
         return Point2(int(self.x), int(self.y))
 
+    def mul(self, scalar: float) -> 'Point2':
+        """multiplies this point's coordinates by a scalar"""
+        return Point2(scalar * self.x, scalar * self.y)
+
+    def div(self, scalar: float) -> 'Point2':
+        """divides this point's coordinates by a scalar"""
+        return self.mul(1 / scalar)
+
     def adjacent(self) -> list['Point2']:
         """
         returns adjacent locations
