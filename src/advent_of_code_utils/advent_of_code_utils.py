@@ -253,31 +253,60 @@ def plot_grid(
 
 @dataclass
 class Point2:
-    l: int
-    c: int
+    x: int
+    y: int
+
+    @property
+    def l(self) -> int:  # noqa: E743
+        """for use when dealing with line/char grids"""
+        return self.x
+
+    @l.setter
+    def l(self, value: int) -> None:  # noqa: E743
+        """for use when dealing with line/char grids"""
+        self.x = value
+
+    @property
+    def c(self) -> int:  # noqa: E743
+        """for use when dealing with line/char grids"""
+        return self.y
+
+    @c.setter
+    def c(self, value: int) -> None:  # noqa: E743
+        """for use when dealing with line/char grids"""
+        self.y = value
 
     def __add__(self, other: 'Point2') -> 'Point2':
-        return Point2(self.l + other.l, self.c + other.c)
+        return Point2(self.x + other.x, self.y + other.y)
 
     def __neg__(self) -> 'Point2':
-        return Point2(-self.l, -self.c)
+        return Point2(-self.x, -self.y)
 
     def __sub__(self, other: 'Point2') -> 'Point2':
         return self + (-other)
 
     def __eq__(self, other: 'Point2') -> bool:
-        return self.l == other.l and self.c == other.c
+        return self.x == other.x and self.y == other.y
 
     def __ne__(self, other: 'Point2') -> bool:
         return not self.__eq__(other)
 
     def __repr__(self) -> str:
-        return f'({self.l}, {self.c})'
+        return f'({self.x}, {self.y})'
 
     def __hash__(self) -> int:
-        return hash((self.l, self.c))
+        return hash((self.x, self.y))
+
+    def int(self) -> 'Point2':
+        """casts the elements as integers"""
+        return Point2(int(self.x), int(self.y))
 
     def adjacent(self) -> list['Point2']:
-        """returns adjacent loctions (does not bounds check)"""
+        """
+        returns adjacent locations
+
+        for grids the order is NESW
+        for XY coords this is WNES
+        """
         offsets = [Point2(-1, 0), Point2(0, 1), Point2(1, 0), Point2(0, -1)]
         return [self + offset for offset in offsets]
